@@ -23,7 +23,7 @@
  * --interactive` locally and pasting the new JSON into TV_SESSION_JSON.
  */
 import http from "http";
-import { writeFileSync, existsSync } from "fs";
+import { writeFileSync, existsSync, readFileSync } from "fs";
 import { getOHLCV } from "./ohlcv.js";
 import { getQuote } from "./market.js";
 
@@ -53,6 +53,33 @@ function bootstrapSession(): void {
     console.error(`[http] Session written to ${SESSION_FILE} from env`);
   } catch (err) {
     console.error(`[http] Failed to materialise session from env: ${(err as Error).message}`);
+  }
+}
+
+// TradingView sessions last ~25 days before the cookies expire and a re-login
+// is needed. We surface the session's age on /health so the bot can warn the
+// operator BEFORE data requests start failing.
+const SESSION_TTL_DAYS = 25;
+
+function sessionInfo(): {
+  present: boolean;
+  savedAt: string | null;
+  ageDays: number | null;
+  expiresInDays: number | null;
+} {
+  const empty = { present: false, savedAt: null, ageDays: null, expiresInDays: null };
+  try {
+    if (!existsSync(SESSION_FILE)) return empty;
+    const s = JSON.parse(readFileSync(SESSION_FILE, "utf-8"));
+    const savedAt: string | null = s.savedAt ?? null;
+    if (!savedAt) return { present: true, savedAt: null, ageDays: null, expiresInDays: null };
+    const t = new Date(savedAt).getTime();
+    if (Number.isNaN(t)) return { present: true, savedAt, ageDays: null, expiresInDays: null };
+    const ageDays = +((Date.now() - t) / 86_400_000).toFixed(1);
+    const expiresInDays = +(SESSION_TTL_DAYS - ageDays).toFixed(1);
+    return { present: true, savedAt, ageDays, expiresInDays };
+  } catch {
+    return empty;
   }
 }
 
@@ -86,7 +113,12 @@ const server = http.createServer(async (req, res) => {
     const path = url.pathname;
 
     if (path === "/health" || path === "/") {
-      sendJSON(res, 200, { ok: true, service: "tradingview-http", time: new Date().toISOString() });
+      sendJSON(res, 200, {
+        ok: true,
+        service: "tradingview-http",
+        time: new Date().toISOString(),
+        session: sessionInfo(),
+      });
       return;
     }
 
