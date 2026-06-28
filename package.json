@@ -11,15 +11,17 @@
     "build": "tsc",
     "dev": "tsc --watch",
     "start": "node dist/index.js",
+    "http": "node dist/http.js",
     "login": "node dist/login.js",
     "login:interactive": "node dist/login.js --interactive",
     "login:import": "node dist/login.js --import-cookies",
-    "inspector": "npx @modelcontextprotocol/inspector node dist/index.js"
+    "inspector": "npx @modelcontextprotocol/inspector node dist/index.js",
+    "daily": "node dist/daily_picks.js"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
     "@types/ws": "^8.18.1",
-    "playwright": "^1.48.0",
+    "playwright": "^1.48.2",
     "tough-cookie": "^4.1.4",
     "ws": "^8.19.0",
     "zod": "^3.23.0"

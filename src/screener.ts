@@ -20,7 +20,7 @@ export interface ScreenerFilter {
     | "not_in"
     | "crosses_up"
     | "crosses_down";
-  right: number | string | number[];
+  right: number | string | number[] | string[];
 }
 
 export interface ScreenerSort {

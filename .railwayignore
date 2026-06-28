@@ -1,0 +1,10 @@
+# Force Railway to build with Nixpacks (per railway.json) instead of the local
+# Dockerfile, which targets the stdio MCP + an unsupported VOLUME. The HTTP
+# microservice is built by Nixpacks: npm run build → node dist/http.js.
+Dockerfile
+Dockerfile.login
+docker-compose.yml
+.docker/
+logs/
+*.mjs
+render_charts.py

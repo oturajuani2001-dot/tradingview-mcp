@@ -4,3 +4,5 @@ dist/
 .tv_session.json
 *.js.map
 scripts/
+.DS_Store
+logs/

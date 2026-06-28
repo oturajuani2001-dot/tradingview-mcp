@@ -16,6 +16,7 @@ import * as layouts from "./layouts.js";
 import * as ohlcv from "./ohlcv.js";
 import * as scripts from "./scripts.js";
 import * as account from "./account.js";
+import * as broker from "./broker.js";
 import { resetSession } from "./client.js";
 import { SCREENER_FIELDS } from "./screener.js";
 
@@ -330,6 +331,22 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
       inputSchema: { type: "object", properties: {}, required: [] },
     },
 
+    // ── Broker (Interactive Brokers via TradingView panel) ───────────────────
+    {
+      name: "get_broker_snapshot",
+      description: "Read your Interactive Brokers account from TradingView: balance, open positions, and pending orders. Uses a headless browser with your saved session.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          screenshot: {
+            type: "boolean",
+            description: "Also capture a screenshot of the broker panel (default false)",
+          },
+        },
+        required: [],
+      },
+    },
+
     // ── Session ──────────────────────────────────────────────────────────────
     {
       name: "reset_session",
@@ -516,6 +533,15 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       // ── Account ─────────────────────────────────────────────────────────────
       case "get_account": {
         const result = await account.getAccount();
+        return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+      }
+
+      // ── Broker ───────────────────────────────────────────────────────────────
+      case "get_broker_snapshot": {
+        const { screenshot } = z.object({
+          screenshot: z.boolean().optional(),
+        }).parse(args ?? {});
+        const result = await broker.getBrokerSnapshot(screenshot ?? false);
         return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
       }
 
